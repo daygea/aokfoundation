@@ -1,0 +1,90 @@
+/* ----------------------------------------------------------------
+    Colors
+
+    Replace the RGBA Code with your Desired Color
+-----------------------------------------------------------------*/
+
+/* Purple Colored Elements rgba(76, 72, 207, 1) */
+
+::-moz-selection {
+    color: #ffffff;
+    background: rgba(76, 72, 207, 1);
+}
+
+::selection {
+    color: #ffffff;
+    background: rgba(76, 72, 207, 1);
+}
+
+.bgColor { background-color: rgba(76, 72, 207, 1); }
+
+.coloredText { 
+  color: rgba(76, 72, 207, 1);
+  font-weight: bold;
+}
+
+.highlightedColor { background-color: rgba(76, 72, 207, 1); }
+
+a:hover { color: rgba(76, 72, 207, 1); }
+
+.button.secondary {
+    background-color: rgba(76, 72, 207, 1);
+    color: #fff;
+}
+
+.button.secondary:hover {
+    background-color: rgba(76, 72, 207, 0.9);
+    color: #fff;
+}
+
+.button.hollow.secondary {
+    border: 1px solid rgba(76, 72, 207, 1);
+    background-color: transparent;
+    color: rgba(76, 72, 207, 1);
+}
+
+.button.hollow.secondary:hover {
+	border: 1px solid rgba(76, 72, 207, 0.9);
+    color: rgba(76, 72, 207, 0.9);
+}
+
+.menuInline ul ul.subMenu li a:not(.button):hover,
+.menuInline a:not(.button):hover { color: rgba(76, 72, 207, 1); }
+
+.tabs-title > a:focus,
+.tabs-title > a[aria-selected=true] {
+  background: transparent;
+  border-bottom: 1px solid rgba(76, 72, 207, 1);
+}
+
+.tabs.vertical .tabs-title > a:focus,
+.tabs.vertical .tabs-title > a[aria-selected=true] {
+  border-right: 1px solid rgba(76, 72, 207, 1);
+  color: rgba(76, 72, 207, 1);
+}
+
+.accordion-item.is-active > .accordion-title { border-bottom: 1px solid rgba(76, 72, 207, 1); }
+
+.featureBoxes-1 > div:hover [class^="icon-"],
+.featureBoxes-2 > div:hover [class^="icon-"] { color: rgba(76, 72, 207, 1); }
+
+.featureBoxes-2 .boxIcon-2::after {
+  background-color: rgba(76, 72, 207, 1);
+  width: 0;
+}
+
+.callout.default { 
+  background-color: rgba(76, 72, 207, 0.9);
+  border-color: rgba(76, 72, 207, 1);
+}
+
+.teamSocialIcons a:hover { color: rgba(76, 72, 207, 1); }
+
+.iconCloud a:hover {
+  background-color: rgba(76, 72, 207, 1);
+  color: white;
+}
+
+
+
+
