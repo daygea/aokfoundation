@@ -603,3 +603,30 @@ h1.h6, h2.h6, h3.h6, h4.h6, h5.h6 {
   .policyToc { padding: 1.25rem; }
   .policyDoc h2.title { margin-top: 2.25rem; }
 }
+
+/* --- Footer legal bar -------------------------------------------
+   The policy link previously sat at 0.875rem under the copyright in
+   a quarter-width column. A full-width bar is where people look.
+-----------------------------------------------------------------*/
+.footerLegal {
+  border-top: 1px solid rgba(21, 21, 21, 0.1);
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  padding-bottom: 0.5rem;
+}
+.footerLegal p {
+  font-size: 0.875rem !important;
+  margin-bottom: 0;
+  color: #666;
+}
+.footerLegal a {
+  text-decoration: underline;
+  font-size: 0.875rem;
+}
+.footerLegal .sep { padding: 0 0.5rem; opacity: 0.5; }
+
+@media only screen and (max-width: 39.9375em) {
+  .footerLegal { text-align: center; }
+  .footerLegal .sep { display: block; height: 0; overflow: hidden; padding: 0; }
+  .footerLegal a { display: inline-block; margin-top: 0.5rem; }
+}
