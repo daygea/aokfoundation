@@ -128,15 +128,44 @@
 
 
 # --------------------------------------------------------------
-# 5. TIDY URLS
+# 5. HTTPS REDIRECT - DELIBERATELY NOT ENABLED HERE
+#
+# An earlier version of this file forced HTTPS with:
+#
+#     RewriteCond %{HTTPS} !=on
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+#
+# That caused ERR_TOO_MANY_REDIRECTS. On most shared hosting, TLS is
+# terminated by a proxy or load balancer in front of Apache. Apache
+# then receives a plain HTTP request even though the visitor arrived
+# over HTTPS, so %{HTTPS} is never "on", the condition always matches,
+# and the rule redirects to HTTPS forever.
+#
+# USE cPANEL INSTEAD. Domains -> your domain -> "Force HTTPS Redirect".
+# It is one toggle, it is applied at the right layer, and it cannot
+# loop. That is the correct fix, not a cleverer rewrite rule.
+#
+# ONLY if your host has no such toggle, uncomment the block below. It
+# checks every signal a proxy might use to report the original scheme,
+# so it cannot loop the way the old rule did. Test it on a staging
+# copy first, in a private window, on both www and non-www.
+#
+# <IfModule mod_rewrite.c>
+#   RewriteEngine On
+#   RewriteCond %{HTTPS} !=on
+#   RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+#   RewriteCond %{HTTP:X-Forwarded-SSL} !=on
+#   RewriteCond %{SERVER_PORT} !=443
+#   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# </IfModule>
+#
+# A note on www vs non-www: every canonical tag on this site points at
+# https://aokfoundation.org/ (no www), so www should redirect there.
+# Set that up in cPanel as well, NOT here - combining a host redirect
+# with a scheme redirect in .htaccess is the other common way to build
+# a loop. Before enabling it, confirm your SSL certificate covers the
+# www hostname, or the redirect will land on a certificate warning.
 # --------------------------------------------------------------
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-
-  # Force HTTPS.
-  RewriteCond %{HTTPS} !=on
-  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
-</IfModule>
 
 # Do not list directory contents.
 Options -Indexes
