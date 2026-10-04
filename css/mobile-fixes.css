@@ -1,0 +1,605 @@
+/* ==============================================================
+   AOK FOUNDATION — MOBILE / RESPONSIVE / A11Y FIXES
+   Load LAST, after app.min.css, colors.css and responsive.css.
+   Everything here is additive; no vendor file is modified.
+   Breakpoint note: app.min.css switches to the desktop inline
+   navigation at 64em (1024px). Every rule below uses the same
+   number so CSS and JS can never disagree again.
+================================================================= */
+
+/* --------------------------------------------------------------
+   1. NAVIGATION
+   The template hides the hamburger nowhere, and relied on JS
+   adding .open to reveal the desktop bar. We use the template's
+   own ".classic" variant instead and hide the hamburger on
+   desktop, so no JS is needed to render the nav.
+-----------------------------------------------------------------*/
+@media only screen and (min-width: 64em) {
+  #menuIcon { display: none !important; }
+}
+
+/* Hamburger: real, focusable, comfortable target */
+#menuIcon {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+#menuIcon:focus-visible {
+  outline: 3px solid #4c48cf;
+  outline-offset: -3px;
+}
+
+/* Backdrop behind the mobile drawer */
+.navBackdrop {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background: rgba(21, 21, 21, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s;
+  z-index: 9;
+}
+body.nav-open .navBackdrop { opacity: 1; visibility: visible; }
+
+/* Scroll lock while the drawer is open (JS sets top:) */
+body.nav-locked {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+}
+
+@media only screen and (max-width: 63.9375em) {
+  /* Drawer must scroll on short screens (landscape phones) and
+     clear the iOS home indicator / Android gesture bar. */
+  .menuInline {
+    max-width: 88%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .menuInline > ul {
+    padding: 5rem 1.5rem calc(3rem + env(safe-area-inset-bottom, 0px));
+  }
+  /* 44px minimum touch targets (WCAG 2.5.8 / Apple HIG) */
+  .menuInline ul > li.navLink > a:not(.navIcon) {
+    padding: 0.75rem 1rem;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  .menuInline ul li a.navIcon {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    text-align: center;
+    margin-right: 4px;
+  }
+  .menuInline > ul li.navLink:last-child { margin-top: 1.25rem; }
+}
+
+/* Donate call-to-action inside the drawer */
+.navDonate a {
+  display: inline-block !important;
+  background: #4c48cf;
+  color: #fff !important;
+  padding: 0.75rem 1.5rem !important;
+  letter-spacing: 0.12rem;
+  font-size: 1rem !important;
+  min-height: 44px;
+}
+.navDonate a:hover { background: #3f3bb8; color: #fff !important; }
+@media only screen and (min-width: 64em) {
+  .navDonate a { padding: 0.5rem 1.1rem !important; }
+}
+
+/* --------------------------------------------------------------
+   2. SCROLL ANCHORS UNDER THE FIXED 80px HEADER
+-----------------------------------------------------------------*/
+html { scroll-behavior: smooth; }
+#home, #about, #team, #blog-section, #sdgs, #contact {
+  scroll-margin-top: 96px;
+}
+
+/* --------------------------------------------------------------
+   3. HERO — legibility and mobile weight
+-----------------------------------------------------------------*/
+.heroWrapper .hero::before {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  /* Light touch: enough to keep white text legible against the photo
+     without visibly darkening the image. Raise these three values if
+     the headline is still hard to read; lower them to show more photo. */
+  background: linear-gradient(180deg,
+              rgba(0, 0, 0, 0.22) 0%,
+              rgba(0, 0, 0, 0.06) 45%,
+              rgba(0, 0, 0, 0.28) 100%);
+  pointer-events: none;
+}
+.heroWrapper .horizontalCenter { z-index: 2; }
+
+/* Most of the contrast now comes from the text itself rather than
+   from dimming the photograph. */
+.heroWrapper h1 {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Academy hero photograph. Declared here rather than inline so WebP can
+   be served with a JPEG fallback; an inline style would beat both.
+   The plain url() line is the fallback for browsers without image-set. */
+.heroWrapper .hero.academyHero {
+  background-image: url("../img/hero-img/academy-hero.jpg");
+  background-image: -webkit-image-set(
+      url("../img/hero-img/academy-hero.webp") type("image/webp"),
+      url("../img/hero-img/academy-hero.jpg") type("image/jpeg"));
+  background-image: image-set(
+      url("../img/hero-img/academy-hero.webp") type("image/webp"),
+      url("../img/hero-img/academy-hero.jpg") type("image/jpeg"));
+  background-position: center center;
+  background-size: cover;
+}
+
+/* This is a bright, busy photograph, so the headline needs a real scrim -
+   heaviest through the middle band where the type actually sits. */
+.heroWrapper .hero.academyHero::before {
+  background: linear-gradient(180deg,
+              rgba(14, 12, 38, 0.62) 0%,
+              rgba(14, 12, 38, 0.50) 35%,
+              rgba(14, 12, 38, 0.52) 65%,
+              rgba(14, 12, 38, 0.72) 100%);
+}
+
+@media only screen and (max-width: 47.9375em) {
+  /* Serve the 1000px hero instead of the full-size one */
+  .heroWrapper .hero {
+    background-image: url("../img/hero-img/hero-img-13-1000.jpg") !important;
+    background-position: center center;
+    height: 78vh;
+    min-height: 420px;
+    max-height: 620px;
+  }
+  .heroWrapper .hero.academyHero {
+    background-image: url("../img/hero-img/academy-hero-1000.jpg") !important;
+    background-image: -webkit-image-set(
+        url("../img/hero-img/academy-hero-1000.webp") type("image/webp"),
+        url("../img/hero-img/academy-hero-1000.jpg") type("image/jpeg")) !important;
+    background-image: image-set(
+        url("../img/hero-img/academy-hero-1000.webp") type("image/webp"),
+        url("../img/hero-img/academy-hero-1000.jpg") type("image/jpeg")) !important;
+    background-position: center center;
+    height: auto;
+    min-height: 460px;
+    max-height: none;
+    padding: 6rem 0 3rem;
+  }
+  .heroWrapper h1 { font-size: 1.6rem; line-height: 1.3; }
+}
+
+/* --------------------------------------------------------------
+   4. SECTION RHYTHM
+   .marginTop/.marginBottom are 120px, which wastes most of a
+   phone screen between sections.
+-----------------------------------------------------------------*/
+@media only screen and (max-width: 63.9375em) {
+  .marginTop    { margin-top: 56px; }
+  .marginBottom { margin-bottom: 56px; }
+  .floatContainer { margin-bottom: 48px; }
+}
+
+/* The decorative rule on .title sits at left:110% below 64em and
+   pushes the page sideways on narrow screens. */
+@media only screen and (max-width: 63.9375em) {
+  .title:before, .titleCenter:after { display: none; }
+}
+
+/* --------------------------------------------------------------
+   5. IMAGES
+-----------------------------------------------------------------*/
+img { max-width: 100%; height: auto; }
+
+/* .imgBorder is inline-block; without this the offset frame
+   overflows on small screens. */
+.imgBorder { max-width: 100%; }
+@media only screen and (max-width: 39.9375em) {
+  .imgBorder { padding: 0 0 10px 10px; }
+  .imgBorder:before { top: 10px; right: 10px; }
+}
+
+/* Sustainable Development Goals grid.
+   Was small-3 x4 with a hard-coded 250px height: on a 360px phone
+   each tile was ~78px wide and 250px tall. */
+.sdgGrid img {
+  width: 100%;
+  height: auto;
+  max-width: 250px;
+  display: block;
+  margin: 0 auto 1rem;
+}
+
+/* --------------------------------------------------------------
+   6. BLOG CARDS
+   Fixed width:300px overflowed 320px viewports once container
+   padding and flex gap were added.
+-----------------------------------------------------------------*/
+.articles-container { padding: 0.5rem 0 1rem; }
+.medium-card {
+  width: 100%;
+  max-width: 340px;
+  flex: 1 1 280px;
+}
+.medium-card a:focus-visible { outline: 2px solid #4c48cf; outline-offset: 2px; }
+.blogStatus { text-align: center; color: #666; padding: 1rem 0; }
+
+/* --------------------------------------------------------------
+   7. MAP
+   min-height:520px is over half a phone screen for a map most
+   mobile users will not interact with.
+-----------------------------------------------------------------*/
+@media only screen and (max-width: 63.9375em) {
+  #map { min-height: 300px; height: 300px; }
+}
+
+/* --------------------------------------------------------------
+   8. CONTACT / FOOTER
+-----------------------------------------------------------------*/
+#contact .floatingBoxLeft p { margin-bottom: 0.5rem; }
+#contact .floatingBoxLeft a { text-decoration: underline; }
+
+/* .floatingBoxLeft is position:absolute from 40em up and overhangs the
+   map. Anything added inside it grows downward over the section below,
+   so cap it and let it scroll rather than distort the layout. */
+@media only screen and (min-width: 40em) {
+  #contact .floatContainer .floatingBoxLeft > div {
+    max-height: 100%;
+    overflow: auto;
+  }
+}
+
+/* Bank details: replaces the &nbsp; alignment hack, which
+   collapsed on every screen it was not authored on. */
+.bankDetails { margin: 0; }
+.bankDetails dt {
+  font-weight: 400;
+  opacity: 0.75;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+.bankDetails dd { margin: 0 0 0.25rem; font-weight: 700; }
+
+@media only screen and (max-width: 39.9375em) {
+  /* Footer was small-6 + small-6 side by side: two 140px columns
+     of dense text on a phone. Stack them. */
+  footer .footerWrapper .small-6.columns,
+  footer .small-8.columns,
+  footer .small-4.columns {
+    width: 100%;
+    float: none;
+    margin-bottom: 2rem;
+  }
+  #footerSocials, #footerInfo { float: none !important; }
+}
+
+/* --------------------------------------------------------------
+   9. TYPOGRAPHY / OVERFLOW SAFETY
+-----------------------------------------------------------------*/
+body { -webkit-text-size-adjust: 100%; }
+h1, h2, h3, h4, h5, h6, p, a { overflow-wrap: break-word; }
+
+/* Foundation rows have negative side margins; loose text placed
+   directly in a .row bleeds past the gutter. Belt and braces in
+   case any is reintroduced. */
+.row > h1, .row > h2, .row > h3, .row > p {
+  padding-left: 0.9375rem;
+  padding-right: 0.9375rem;
+}
+
+/* --------------------------------------------------------------
+   10. FOCUS VISIBILITY + REDUCED MOTION
+-----------------------------------------------------------------*/
+a:focus-visible, button:focus-visible, .button:focus-visible {
+  outline: 3px solid #4c48cf;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------
+   11. PRINT
+-----------------------------------------------------------------*/
+@media print {
+  header, .navBackdrop, #map, .heroWrapper { display: none !important; }
+  body.pageBorder { margin: 0; }
+}
+
+/* --------------------------------------------------------------
+   12. HEADING-LEVEL UTILITIES
+   Footer headings were promoted from <h6> to <h2> so the document
+   outline is correct for screen readers; these keep the visual
+   size unchanged.
+-----------------------------------------------------------------*/
+h1.h6, h2.h6, h3.h6, h4.h6, h5.h6 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+@media only screen and (min-width: 40em) {
+  h1.h6, h2.h6, h3.h6, h4.h6, h5.h6 { font-size: 1.125rem; }
+}
+
+/* --------------------------------------------------------------
+   13. HEADER STAYS PUT WHILE SCROLLING
+   Headroom.js is no longer initialised, but plugins.js still
+   ships it and app.min.css still carries the slide classes.
+   These neutralise the hide-on-scroll transform if anything
+   ever re-applies them.
+-----------------------------------------------------------------*/
+.menuBar.slide,
+.menuBar.slideUp,
+.menuBar.slideReset,
+#autoHide.slide,
+#autoHide.slideUp,
+#autoHide.slideReset {
+  -webkit-transform: none !important;
+  -ms-transform: none !important;
+  transform: none !important;
+  position: static !important;
+  top: auto !important;
+}
+
+/* Keep the drawer clear of the fixed header on mobile */
+@media only screen and (max-width: 63.9375em) {
+  .menuInline { z-index: 11; }
+}
+
+/* ==============================================================
+   14. ACADEMY PAGE (academy.html)
+   Uses the same theme as index.html; only the page-specific
+   patterns below are new.
+================================================================= */
+
+#home, #about-academy, #before-you-apply, #skills, #how-it-works,
+#faq, #apply { scroll-margin-top: 96px; }
+
+/* --- Hero: subtitle under the headline --------------------------*/
+.heroWrapper p { margin-bottom: 1.5rem; }
+@media only screen and (max-width: 39.9375em) {
+  .heroWrapper p { font-size: 1rem !important; }
+}
+
+/* --- "Before you apply" boxes -----------------------------------*/
+.featureBoxes-1 .column { padding-bottom: 2rem; }
+.featureBoxes-1 .column p { margin-bottom: 0; }
+
+/* --- Skills grid ------------------------------------------------*/
+.academySkills .column {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.academySkills [class^="icon-"] {
+  color: #4c48cf;
+  margin-right: 0.5rem;
+  font-size: 0.85rem;
+}
+@media only screen and (max-width: 39.9375em) {
+  .academySkills .column { font-size: 0.9375rem; }
+}
+
+/* --- "How it works" numbered steps ------------------------------*/
+.academySteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: academyStep;
+}
+.academySteps > li {
+  position: relative;
+  padding-left: 3.75rem;
+  padding-bottom: 2rem;
+  counter-increment: academyStep;
+}
+.academySteps > li::before {
+  content: counter(academyStep, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  line-height: 2.5rem;
+  text-align: center;
+  border-radius: 50%;
+  background: #4c48cf;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+/* Connecting rule between the step markers */
+.academySteps > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 1.25rem;
+  top: 2.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: rgba(76, 72, 207, 0.2);
+}
+.academySteps > li h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.academySteps > li p { margin-bottom: 0; }
+@media only screen and (max-width: 39.9375em) {
+  .academySteps > li { padding-left: 3rem; padding-bottom: 1.75rem; }
+  .academySteps > li::before { width: 2rem; height: 2rem; line-height: 2rem; font-size: 0.75rem; }
+  .academySteps > li:not(:last-child)::after { left: 1rem; top: 2rem; }
+  .academySteps > li h3 { font-size: 1.0625rem; }
+}
+
+/* --- FAQ accordion ----------------------------------------------*/
+.accordion-title {
+  font-size: 1rem !important;
+  padding: 1.125rem 1.5rem 1.125rem 0;
+  min-height: 48px;
+  line-height: 1.4;
+}
+.accordion-content { padding: 0 0 1.25rem; }
+.accordion-content p:last-child,
+.accordion-content ul:last-child { margin-bottom: 0; }
+.accordion-item { border-bottom: 1px solid rgba(21, 21, 21, 0.1); }
+
+/* --- Apply call to action ---------------------------------------*/
+.academyCta { padding: 2.5rem; }
+.academyCta p { margin-bottom: 0; }
+.academyCta a:not(.button) { color: #fff; text-decoration: underline; }
+.academyCtaBtn { display: flex; align-items: center; }
+@media only screen and (max-width: 39.9375em) {
+  .academyCta { padding: 1.75rem 1.25rem; }
+  .academyCtaBtn { margin-top: 1.5rem; display: block; }
+}
+
+/* --- Academy: key facts strip -----------------------------------*/
+#key-facts { margin-top: -3.5rem; position: relative; z-index: 3; }
+.academyFacts { padding: 1.75rem 1.5rem 0.75rem; }
+.academyFacts .column { padding-bottom: 1rem; }
+.factLabel {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.18rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.35rem;
+}
+.factValue {
+  display: block;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+@media only screen and (max-width: 39.9375em) {
+  #key-facts { margin-top: -2rem; }
+  .academyFacts { padding: 1.25rem 1.25rem 0.5rem; }
+  .factValue { font-size: 1.125rem; }
+}
+
+/* --- Academy: "can you apply" check list ------------------------*/
+.checkList { list-style: none; margin-left: 0; margin-bottom: 0; }
+.checkList li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+.checkList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #4c48cf;
+}
+
+/* --- Academy: honesty callout -----------------------------------*/
+.academyHonesty {
+  border-left: 4px solid #4c48cf;
+  background: #f4f4f8;
+  padding: 1.75rem;
+}
+.academyHonesty h3 {
+  font-size: 1.125rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.75rem;
+}
+.academyHonesty p { margin-bottom: 0; }
+
+/* Keep the featureBoxes icon rule from shrinking the check bullets */
+.featureBoxes-1 .checkList li::before { font-size: 0; }
+
+/* ==============================================================
+   15. TERMS & PRIVACY PAGE (terms-policy.html)
+================================================================= */
+
+#policy, #terms, #privacy, #donations, #academy-data,
+#your-rights, #contact-policy { scroll-margin-top: 96px; }
+
+/* The policy hero carries only a title, so it needs far less height
+   than the academy hero it inherits from. */
+.heroWrapper .hero.policyHero {
+  height: 340px;
+  min-height: 0;
+  max-height: 340px;
+}
+@media only screen and (max-width: 47.9375em) {
+  .heroWrapper .hero.policyHero {
+    height: auto;
+    max-height: none;
+    min-height: 260px;
+    padding: 7rem 0 2.5rem;
+  }
+}
+
+/* Legal text is read, not scanned - give it a comfortable measure
+   and generous leading. */
+.policyDoc { max-width: 46rem; }
+.policyDoc p, .policyDoc li { line-height: 1.75; }
+.policyDoc h2.title { margin-top: 3rem; }
+.policyDoc h2.title:first-of-type { margin-top: 1rem; }
+.policyDoc h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2rem;
+  margin-bottom: 0.65rem;
+}
+.policyDoc ul { margin-bottom: 1.25rem; }
+.policyDoc li { margin-bottom: 0.5rem; }
+
+.policyIntro {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  padding-bottom: 0.5rem;
+}
+
+/* In-page contents */
+.policyToc {
+  background: #f4f4f8;
+  border-left: 4px solid #4c48cf;
+  padding: 1.5rem 1.75rem;
+  margin: 2rem 0 1rem;
+}
+.policyToc h2 {
+  font-size: 0.75rem;
+  letter-spacing: 0.18rem;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 0.75rem;
+}
+.policyToc ul { list-style: none; margin: 0; }
+.policyToc li { margin-bottom: 0.4rem; }
+.policyToc a { text-decoration: underline; }
+
+.policyDoc a { text-decoration: underline; }
+.policyFoot {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(21, 21, 21, 0.12);
+  font-size: 0.9375rem;
+  color: #666;
+}
+
+@media only screen and (max-width: 39.9375em) {
+  .policyToc { padding: 1.25rem; }
+  .policyDoc h2.title { margin-top: 2.25rem; }
+}

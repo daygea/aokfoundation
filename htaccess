@@ -1,0 +1,147 @@
+# ==============================================================
+# AOK FOUNDATION - aokfoundation.org
+# Place in the DOCUMENT ROOT of the MAIN site (same folder as
+# index.html). This is not the academy subdomain file.
+#
+# Covers: security response headers (audit item 5), compression
+# and caching (never deployed from the August audit).
+#
+# cPanel/Apache shared hosting. If any block causes a 500 error,
+# comment it out and re-test - mod_headers or mod_deflate may not
+# be enabled on your plan.
+# ==============================================================
+
+
+# --------------------------------------------------------------
+# 1. SECURITY RESPONSE HEADERS
+# --------------------------------------------------------------
+<IfModule mod_headers.c>
+
+  # Stop other sites embedding your pages in a frame (clickjacking).
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # Stop browsers guessing a file is a different type than declared.
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Send the page address, but not the full path, to other sites.
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Switch off browser features this site does not use.
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
+
+  # Force HTTPS for two years. ONLY enable this once you have
+  # confirmed HTTPS works on every page and on the www and non-www
+  # hostnames. It is hard to undo: browsers cache it.
+  # Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+
+  # ------------------------------------------------------------
+  # Content Security Policy
+  #
+  # START IN REPORT-ONLY. The line below reports violations to the
+  # browser console without blocking anything, so you can watch for
+  # a week and confirm nothing legitimate breaks. When the console
+  # is clean, comment this line out and uncomment the enforcing one.
+  #
+  # 'unsafe-inline' is required for scripts because the map
+  # initialiser, the copyright-year script and the Mailchimp tag are
+  # inline in the page. Removing it means moving those to external
+  # files or adding per-request nonces, which static Apache config
+  # cannot do. It is a real weakening of the policy, but the rest of
+  # the directives still block the common injection paths.
+  # ------------------------------------------------------------
+
+  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com https://chimpstatic.com https://*.list-manage.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com https://*.google.com https://miro.medium.com https://cdn-images-1.medium.com; connect-src 'self' https://api.rss2json.com https://maps.googleapis.com https://*.list-manage.com; frame-src https://www.google.com; form-action 'self' https://*.list-manage.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+
+  # Enforcing version - switch to this once Report-Only is clean:
+  # Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com https://chimpstatic.com https://*.list-manage.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com https://*.google.com https://miro.medium.com https://cdn-images-1.medium.com; connect-src 'self' https://api.rss2json.com https://maps.googleapis.com https://*.list-manage.com; frame-src https://www.google.com; form-action 'self' https://*.list-manage.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+
+</IfModule>
+
+
+# --------------------------------------------------------------
+# 2. COMPRESSION
+# Cuts the CSS and JS payload by roughly 70% over the wire.
+# --------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+  AddOutputFilterByType DEFLATE application/javascript application/x-javascript text/javascript
+  AddOutputFilterByType DEFLATE application/json application/xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+  AddOutputFilterByType DEFLATE application/vnd.ms-fontobject font/ttf font/otf
+</IfModule>
+
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/javascript
+  AddOutputFilterByType BROTLI_COMPRESS application/javascript application/json
+  AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+</IfModule>
+
+
+# --------------------------------------------------------------
+# 3. CACHING
+# Static assets are versioned by filename, so they can be cached
+# hard. HTML must not be, or visitors will not see updates.
+# --------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  ExpiresByType text/html                     "access plus 0 seconds"
+  ExpiresByType application/xml               "access plus 1 hour"
+
+  ExpiresByType text/css                      "access plus 1 year"
+  ExpiresByType application/javascript        "access plus 1 year"
+  ExpiresByType text/javascript               "access plus 1 year"
+
+  ExpiresByType image/jpeg                    "access plus 1 year"
+  ExpiresByType image/png                     "access plus 1 year"
+  ExpiresByType image/webp                    "access plus 1 year"
+  ExpiresByType image/svg+xml                 "access plus 1 year"
+  ExpiresByType image/x-icon                  "access plus 1 year"
+
+  ExpiresByType font/woff                     "access plus 1 year"
+  ExpiresByType font/woff2                    "access plus 1 year"
+  ExpiresByType application/font-woff         "access plus 1 year"
+  ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|jpg|jpeg|png|webp|svg|woff|woff2|ttf|eot|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(html|xml)$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+
+# --------------------------------------------------------------
+# 4. CORRECT MIME TYPES
+# Some shared hosts do not serve .webp or .avif correctly, which
+# silently breaks the hero image fallback chain.
+# --------------------------------------------------------------
+<IfModule mod_mime.c>
+  AddType image/webp              .webp
+  AddType image/avif              .avif
+  AddType font/woff2              .woff2
+  AddType image/svg+xml           .svg
+</IfModule>
+
+
+# --------------------------------------------------------------
+# 5. TIDY URLS
+# --------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Force HTTPS.
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+</IfModule>
+
+# Do not list directory contents.
+Options -Indexes
+
+# Block access to dotfiles.
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>

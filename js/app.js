@@ -1,14 +1,26 @@
-(function($) {
-	
+/* ==============================================================
+   AOK Foundation — app.js
+   Rewritten 2026. Changes vs. previous version:
+   - Removed initializeMenu()/resize handler that re-bound click
+     handlers on every resize and force-opened the drawer between
+     768px and 1023px.
+   - Single nav controller, keyboard accessible, ARIA wired.
+   - Every plugin call guarded so one missing plugin can no longer
+     abort the rest of the script.
+   - Mouse-parallax disabled on touch and for reduced-motion users.
+================================================================= */
+(function ($) {
+  'use strict';
 
-  $(document).foundation();
+  // Must match the 64em desktop breakpoint in app.min.css.
+  var DESKTOP_BREAKPOINT = 1024;
 
-  //Run When Document Ready
-  $(document).on('ready', function() { 
-  	initPreloader();
+  if ($.fn.foundation) { $(document).foundation(); }
+
+  $(function () {
+    initNav();            // first: nav must work even if a plugin fails
+    initPreloader();
     initSwitcher();
-    initInlineMenu();
-    initOverlayMenu();
     initParallaxFx();
     initCounters();
     initProgressBars();
@@ -16,98 +28,143 @@
     initMailChimp();
   });
 
-  //Page Preloader
-  //===================================
+  // Utilities
+  // ===================================
+  function debounce(fn, wait) {
+    var t;
+    return function () {
+      var ctx = this, args = arguments;
+      clearTimeout(t);
+      t = setTimeout(function () { fn.apply(ctx, args); }, wait);
+    };
+  }
+
+  function isDesktop() {
+    return window.innerWidth >= DESKTOP_BREAKPOINT;
+  }
+
+  // Navigation
+  // ===================================
+  function initNav() {
+    var $icon = $('#menuIcon');
+    var $nav = $('.menuInline');
+    var $body = $('body');
+    var scrollY = 0;
+
+    if (!$icon.length || !$nav.length) { return; }
+
+    if (!$nav.attr('id')) { $nav.attr('id', 'primaryNav'); }
+    $nav.attr('role', 'navigation');
+
+    $icon.attr({
+      'role': 'button',
+      'tabindex': '0',
+      'aria-label': 'Open menu',
+      'aria-expanded': 'false',
+      'aria-controls': $nav.attr('id')
+    });
+
+    var $backdrop = $('<div class="navBackdrop"></div>').appendTo($body);
+
+    function lockScroll() {
+      scrollY = window.pageYOffset || document.documentElement.scrollTop;
+      $body.css('top', (-scrollY) + 'px').addClass('nav-locked');
+    }
+
+    function unlockScroll() {
+      $body.removeClass('nav-locked').css('top', '');
+      window.scrollTo(0, scrollY);
+    }
+
+    function setOpen(open) {
+      var wasOpen = $icon.hasClass('open');
+      if (open === wasOpen) { return; }
+
+      $icon.toggleClass('open', open).attr({
+        'aria-expanded': open ? 'true' : 'false',
+        'aria-label': open ? 'Close menu' : 'Open menu'
+      });
+      $body.toggleClass('nav-open', open);
+
+      if (open) { lockScroll(); } else { unlockScroll(); }
+    }
+
+    // Click only. The previous 'click touchstart' pair fired twice on
+    // browsers that do not suppress the synthetic click, and
+    // preventDefault on touchstart blocked scrolls that began on the icon.
+    $icon.on('click', function (e) {
+      e.preventDefault();
+      setOpen(!$icon.hasClass('open'));
+    });
+
+    $icon.on('keydown', function (e) {
+      if (e.which === 13 || e.which === 32) {   // Enter / Space
+        e.preventDefault();
+        $(this).trigger('click');
+      }
+    });
+
+    $backdrop.on('click', function () { setOpen(false); });
+
+    $(document).on('keyup', function (e) {
+      if (e.which === 27) { setOpen(false); }   // Escape
+    });
+
+    // Close the drawer after choosing a destination on mobile.
+    $nav.on('click', 'a', function () {
+      if (!isDesktop()) { setOpen(false); }
+    });
+
+    // Only reacts to a real breakpoint crossing. Mobile browsers fire
+    // resize when the URL bar collapses or the keyboard opens, so this
+    // must not touch state otherwise.
+    var wasDesktop = isDesktop();
+    $(window).on('resize orientationchange', debounce(function () {
+      var nowDesktop = isDesktop();
+      if (nowDesktop !== wasDesktop) {
+        wasDesktop = nowDesktop;
+        if (nowDesktop) { setOpen(false); }
+      }
+    }, 150));
+  }
+
+  // Page preloader
+  // ===================================
   function initPreloader() {
-  	$(".fakeloader").fakeLoader({
-      timeToHide:1200,
-      bgColor:"#ffffff",
-      spinner:"spinner2"
-    });
-
-    $(".flbackdrop").remove();
+    if ($.fn.fakeLoader) {
+      $('.fakeloader').fakeLoader({
+        timeToHide: 500,
+        bgColor: '#ffffff',
+        spinner: 'spinner2'
+      });
+    } else {
+      $('.fakeloader').remove();
+    }
+    // Legacy full-screen white overlay. If it is ever reintroduced and
+    // JS fails to load, the whole page renders blank — remove on sight.
+    $('.flbackdrop').remove();
   }
 
-  //Style Switcher
+  // Style switcher (demo leftover; harmless if the markup is absent)
+  // ===================================
   function initSwitcher() {
-    $('#switcherIcon').on('click', function() {   
-      $('#switcher').toggleClass('open');
-    });
-
-    $('#buyIcon').on('click', function() {   
-      $('#buy').toggleClass('open');
-    });
+    $('#switcherIcon').on('click', function () { $('#switcher').toggleClass('open'); });
+    $('#buyIcon').on('click', function () { $('#buy').toggleClass('open'); });
   }
 
-  //Inline Menu
-  //===================================
-//   function initInlineMenu() {
-//     $('#menuIcon').toggleClass('open');
-//     $('#menuIcon').on('click', function(){
-//       $(this).toggleClass('open');
-//     });
-//   }
-
-//   //Overlay Menu
-//   //===================================
-//   function initOverlayMenu() {
-//     $('#menuIcon').on('click', function(){
-//       $('.menuOverlay').toggleClass('open');
-//     });
-//   }
-
-// Inline Menu
-// ===================================
-function initInlineMenu() {
-  $('#menuIcon').on('click touchstart', function (e) {
-    e.preventDefault(); // Prevents the default behavior of anchor elements
-    $(this).toggleClass('open');
-  });
-}
-
-// Overlay Menu
-// ===================================
-function initOverlayMenu() {
-  $('#menuIcon').on('click touchstart', function (e) {
-    e.preventDefault(); // Prevents the default behavior of anchor elements
-    $('.menuOverlay').toggleClass('open');
-  });
-}
-
-// Check if the screen width is less than a certain threshold (e.g., 768 pixels, which is often used as the breakpoint for mobile devices).
-function isMobileScreen() {
-  return window.innerWidth < 768;
-}
-
-// Initialize the menu based on screen width
-function initializeMenu() {
-  if (isMobileScreen()) {
-    // Close the menu for mobile devices
-    $('#menuIcon').removeClass('open');
-    $('.menuOverlay').removeClass('open');
-  } else {
-    // Open the menu for larger screens
-    $('#menuIcon').addClass('open');
-    $('.menuOverlay').addClass('open');
-    initInlineMenu();
-    initOverlayMenu();
-  }
-}
-
-// Call the initializeMenu function when the document is ready and when the window is resized.
-$(document).ready(function () {
-  initializeMenu();
-
-  $(window).on('resize', function () {
-    initializeMenu();
-  });
-});
-
-
-  //Parallax Elements
-  //===================================
+  // Parallax elements
+  // ===================================
   function initParallaxFx() {
-    $(".parallaxElem").panr({
+    if (!$.fn.panr) { return; }
+
+    var noHover = window.matchMedia && window.matchMedia('(hover: none)').matches;
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // panr tracks the mouse. On touch devices it costs CPU and battery
+    // for an effect nobody can trigger.
+    if (noHover || reduced) { return; }
+
+    $('.parallaxElem').panr({
       moveTarget: $(document),
       sensitivity: 15,
       scale: false,
@@ -116,46 +173,38 @@ $(document).ready(function () {
       panDuration: 1.25,
       resetPanOnMouseLeave: true
     });
-
-    // function onEnterFunction(el) {
-    //   console.log('on enter' + el);
-    // }
-
-    // function onLeaveFunction(el) {
-    //   console.log('on leave' + el);
-    // }
   }
 
-  //Counters
-  //===============================================================================
+  // Counters
+  // ===================================
   function initCounters() {
-    $('.timer').appear(function () {
-      $(this).countTo();
-    });   
+    if (!$.fn.appear || !$.fn.countTo) { return; }
+    $('.timer').appear(function () { $(this).countTo(); });
   }
 
-  //Progress Bars
-  //===============================================================================
+  // Progress bars
+  // ===================================
   function initProgressBars() {
-    $('.pro-bar').each(function(i, elem) {
+    if (!$.fn.appear) { return; }
+    $('.pro-bar').each(function (i, elem) {
       var $elem = $(this),
         percent = $elem.attr('data-pro-bar-percent'),
         delay = $elem.attr('data-pro-bar-delay');
 
-      if (!$elem.hasClass('animated'))
-      $elem.css({ 'width' : '0%' });
+      if (!$elem.hasClass('animated')) { $elem.css({ width: '0%' }); }
 
       $(elem).appear(function () {
-        setTimeout(function() {
-          $elem.animate({ 'width' : percent + '%' }, 2000, 'easeInOutExpo').addClass('animated');
+        setTimeout(function () {
+          $elem.animate({ width: percent + '%' }, 2000, 'easeInOutExpo').addClass('animated');
         }, delay);
       });
     });
   }
 
-  //Lightbox Gallery
-  //===============================================================================
+  // Lightbox gallery
+  // ===================================
   function initLightboxGallery() {
+    if (!$.fn.magnificPopup) { return; }
     $('.lightboxGallery').magnificPopup({
       delegate: 'a',
       type: 'image',
@@ -166,56 +215,34 @@ $(document).ready(function () {
       closeBtnInside: false,
       image: {
         verticalFit: true,
-        titleSrc: function(item) {
-          return item.el.attr('title');
-        }
+        titleSrc: function (item) { return item.el.attr('title'); }
       },
-      gallery: {
-        enabled: true,
-        navigateByImgClick: true
-      },
+      gallery: { enabled: true, navigateByImgClick: true },
       zoom: {
         enabled: true,
-        duration: 300, // don't foget to change the duration also in CSS
+        duration: 300,
         easing: 'ease-in-out',
-        opener: function(element) {
-          return element.find('img');
-        }
+        opener: function (element) { return element.find('img'); }
       }
-      
     });
   }
 
-  //MailChimp
-  //===============================================================================
+  // MailChimp
+  // ===================================
   function initMailChimp() {
-    $('#mc_form').ajaxChimp({
-        language: 'pix',
-        // Replace url with your unique list
-        // url: 'http://pixelosaur.us3.list-manage.com/subscribe/post?u=1056582cdc91fdd7076a2fe2d&id=2ca5725d55'
-    });
+    if (!$.fn.ajaxChimp || !$('#mc_form').length) { return; }
 
-    //Mailchimp translation
-      //
-      // Defaults:
-      //'submit': 'Submitting...',
-      //  0: 'We have sent you a confirmation email',
-      //  1: 'Please enter a value',
-      //  2: 'An email address must contain a single @',
-      //  3: 'The domain portion of the email address is invalid (the portion after the @: )',
-      //  4: 'The username portion of the email address is invalid (the portion before the @: )',
-      //  5: 'This email address looks fake or invalid. Please enter a real email address'
+    $('#mc_form').ajaxChimp({ language: 'pix' });
 
     $.ajaxChimp.translations.pix = {
-        'submit': 'Submitting...',
-        0: '<i class="icon-check"></i> Thank you! We have sent you a confirmation email!',
-        1: '<i class="icon-cross"></i> You must enter a valid e-mail address.',
-        2: '<i class="icon-cross"></i> E-mail address is not valid.',
-        3: '<i class="icon-cross"></i> E-mail address is not valid.',
-        4: '<i class="icon-cross"></i> E-mail address is not valid.',
-        5: '<i class="icon-cross"></i> E-mail address is not valid.'
+      'submit': 'Submitting...',
+      0: '<i class="icon-check"></i> Thank you! We have sent you a confirmation email!',
+      1: '<i class="icon-cross"></i> You must enter a valid e-mail address.',
+      2: '<i class="icon-cross"></i> E-mail address is not valid.',
+      3: '<i class="icon-cross"></i> E-mail address is not valid.',
+      4: '<i class="icon-cross"></i> E-mail address is not valid.',
+      5: '<i class="icon-cross"></i> E-mail address is not valid.'
     };
   }
 
 })(jQuery);
-
